@@ -1,0 +1,10 @@
+{
+  "name": "procurement_signup_gate",
+  "version": "1.0.0",
+  "description": "Custom user validation: denies every public signup; Procurement access is invitation-only",
+  "main": "index.js",
+  "private": true,
+  "dependencies": {
+    "zcatalyst-sdk-node": "^3.4.0"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "deployment": {
+    "name": "procurement_signup_gate",
+    "type": "basicio",
+    "stack": "node20",
+    "memory": 256,
+    "timeout": 15
+  },
+  "execution": {
+    "main": "index.js"
+  }
+}

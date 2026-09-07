@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id               String   @id @default(uuid())
+  name             String
+  plan             String   @default("starter") // starter, professional, enterprise
+  createdAt        DateTime @default(now())
+  maxUsers         Int      @default(5)
+  stripeCustomerId String?
+
+  users            User[]
+}
+
+model User {
+  id           String       @id @default(uuid())
+  tenantId     String
+  email        String
+  passwordHash String
+  mfaSecret    String?
+  status       String       @default("invited") // active, invited, disabled
+  createdAt    DateTime     @default(now())
+
+  tenant       Organization @relation(fields: [tenantId], references: [id])
+  roles        UserRole[]
+
+  @@unique([tenantId, email])
+}
+
+model Role {
+  id        String     @id @default(uuid())
+  name      String     @unique // e.g., Admin, Manager, Approver, Vendor, Viewer
+  
+  userRoles UserRole[]
+  permissions RolePermission[]
+}
+
+model UserRole {
+  id       String @id @default(uuid())
+  userId   String
+  roleId   String
+
+  user     User   @relation(fields: [userId], references: [id])
+  role     Role   @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, roleId])
+}
+
+model Permission {
+  id        String @id @default(uuid())
+  action    String @unique // e.g., po:create, po:approve, vendor:manage
+  
+  rolePermissions RolePermission[]
+}
+
+model RolePermission {
+  id           String @id @default(uuid())
+  roleId       String
+  permissionId String
+
+  role         Role       @relation(fields: [roleId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@unique([roleId, permissionId])
+}

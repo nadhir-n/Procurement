@@ -1,0 +1,22 @@
+{
+  "project": {
+    "name": "Procurement"
+  },
+  "functions": {
+    "folder_path": "functions",
+    "targets": [
+      "procurement_api",
+      "procurement_signup_gate"
+    ]
+  },
+  "client": {
+    "source": "procurement_web",
+    "url_prefix": "/app"
+  },
+  "slate": [
+    {
+      "name": "procurement-web",
+      "source": "procurement_web"
+    }
+  ]
+}

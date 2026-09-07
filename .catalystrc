@@ -1,0 +1,56 @@
+{
+  "defaults": {
+    "project": 1,
+    "env": 1
+  },
+  "actives": {
+    "project": 2,
+    "env": 1
+  },
+  "projects": [
+    {
+      "idx": 1,
+      "id": "36929000000220049",
+      "name": "Procurement",
+      "domain": {
+        "id": "10128820169",
+        "name": "procurement-914406080.development"
+      },
+      "timezone": "Asia/Colombo",
+      "env": [
+        {
+          "idx": 1,
+          "id": "914406080",
+          "name": "Development",
+          "type": 3,
+          "env_status": "Active",
+          "project_details": {
+            "project_name": "Procurement",
+            "id": "36929000000220049",
+            "project_type": "Live"
+          },
+          "is_default": true,
+          "action_required": false
+        }
+      ]
+    },
+    {
+      "idx": 2,
+      "id": "94596000000014049",
+      "name": "Procurement",
+      "domain": {
+        "id": "10129625095",
+        "name": "procurement-932021889.development"
+      },
+      "timezone": "Asia/Colombo",
+      "env": [
+        {
+          "idx": 1,
+          "id": "932021889",
+          "name": "Development",
+          "type": 3
+        }
+      ]
+    }
+  ]
+}

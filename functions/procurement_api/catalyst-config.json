@@ -1,0 +1,13 @@
+{
+  "deployment": {
+    "name": "procurement_api",
+    "type": "advancedio",
+    "stack": "node20",
+    "env_variables": {
+      "PROCUREFLOW_AUTH_ZAID": "10129625095"
+    }
+  },
+  "execution": {
+    "main": "index.js"
+  }
+}

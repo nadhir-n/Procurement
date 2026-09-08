@@ -1,8 +1,8 @@
 // Zoho-Books-style document engine. A template is a rich config object; the SAME
 // renderDocument() function powers both the live editor preview and the final
 // print output, so what you design is exactly what prints.
-import { api, state, currency, fmtDate } from './api.js?v=47';
-import { esc, toast, badge, statusLabel, openPage, closePage } from './ui.js?v=47';
+import { api, state, currency, fmtDate } from './api.js?v=48';
+import { esc, toast, badge, statusLabel, openPage, closePage } from './ui.js?v=48';
 
 // Paper sizes in mm (width × height, portrait).
 export const PAPER_SIZES = {

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import { getHealth } from "./api";
+import { AuthPanel } from "./Auth";
 
 function BackendStatus() {
   const [status, setStatus] = useState<"checking" | "live" | "down">("checking");
@@ -41,9 +42,6 @@ function useCountUp(target: number, inView: boolean) {
 }
 
 export default function Landing() {
-  // Real app origin: on Vite dev (:5173) the app lives on the proxy (:5174);
-  // when served from the proxy (/landing), same-origin "/" is the app.
-  const APP_URL = typeof window !== "undefined" && window.location.port === "5173" ? "http://localhost:5174/" : "/";
   const [openFaq, setOpenFaq] = useState(0);
   const scaleRef = useRef<HTMLDivElement>(null);
   const scaleInView = useInView(scaleRef, { once: true, margin: "-40px" as any });
@@ -71,7 +69,7 @@ export default function Landing() {
             <span className="hidden sm:inline text-[10px] font-bold tracking-[0.14em] text-[#1e6b52] border border-[#d2e5db] rounded-full px-2 py-1">HOTEL OPERATIONS</span>
           </div>
           <motion.div initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }} className="flex items-center gap-2.5">
-            <motion.a href={APP_URL} whileHover={{ y: -1, backgroundColor: "#f0f7f3", borderColor: "#0f241c" }} whileTap={{ scale: 0.96 }} transition={{ duration: 0.18 }} className="hidden sm:inline-flex h-10 px-5 rounded-full border border-[#0f241c]/70 bg-white text-sm font-semibold text-[#0f241c] items-center">Sign in</motion.a>
+            <motion.a href="#auth" whileHover={{ y: -1, backgroundColor: "#f0f7f3", borderColor: "#0f241c" }} whileTap={{ scale: 0.96 }} transition={{ duration: 0.18 }} className="hidden sm:inline-flex h-10 px-5 rounded-full border border-[#0f241c]/70 bg-white text-sm font-semibold text-[#0f241c] items-center">Sign in</motion.a>
             <motion.a href="#cta" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2, type: "spring", stiffness: 320, damping: 22 }} whileHover={{ y: -2, boxShadow: "0 12px 26px rgba(30,107,82,0.32)" }} whileTap={{ scale: 0.96 }} className="group relative overflow-hidden inline-flex h-10 px-5 rounded-full bg-[#1e6b52] text-white text-sm font-semibold items-center gap-1.5">
               <motion.span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent" initial={{ x: "-120%" }} whileHover={{ x: "120%" }} transition={{ duration: 0.6 }} />
               Step into your flow
@@ -344,6 +342,12 @@ export default function Landing() {
         </div>
       </section>
 
+      <section id="auth" className="max-w-[720px] mx-auto px-6 py-10 scroll-mt-20">
+        <motion.div initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+          <AuthPanel />
+        </motion.div>
+      </section>
+
       <section className="max-w-[900px] mx-auto px-6 py-10">
         <h2 className="text-[28px] font-bold text-center">Frequently Asked Questions</h2>
         <div className="mt-6 divide-y border rounded-2xl overflow-hidden bg-white">
@@ -369,7 +373,7 @@ export default function Landing() {
         <div className="text-[11px] tracking-[0.16em] font-bold text-[#7ad3b0]">PROCUREMENT, IN PERFECT FLOW</div>
         <h2 className="mt-3 text-[34px] font-bold">Bring effortless calm to your hospitality procurement.</h2>
         <div className="mt-6 flex justify-center gap-3">
-          <a href={APP_URL} className="h-12 px-7 rounded-full bg-[#1e6b52] font-semibold inline-flex items-center">Step into your procurement flow →</a>
+          <a href="#auth" className="h-12 px-7 rounded-full bg-[#1e6b52] font-semibold inline-flex items-center">Step into your procurement flow →</a>
           <a href="#demo" className="h-12 px-7 rounded-full bg-white text-[#0f241c] font-semibold inline-flex items-center">Request a demo</a>
         </div>
       </footer>

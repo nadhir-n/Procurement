@@ -1,10 +1,10 @@
 // Master data (vendors, items, budgets), payables extras, custom modules, settings.
-import { api, state, currency, fmtDate, refreshCaches, loadReference } from './api.js?v=47';
-import { esc, toast, badge, openModal, closeModal, openPage, closePage, renderTable, listPage, wireListPage, customFieldsHTML, collectCustomFields, applyStoredTheme } from './ui.js?v=47';
-import * as docs from './documents.js?v=47';
-import { startTour } from './tour.js?v=47';
-import { openRecord, factsHTML, linesHTML, emptyHTML, sectionHTML } from './recordview.js?v=47';
-import { itemMeta } from './itempicker.js?v=47';
+import { api, state, currency, fmtDate, refreshCaches, loadReference } from './api.js?v=48';
+import { esc, toast, badge, openModal, closeModal, openPage, closePage, renderTable, listPage, wireListPage, customFieldsHTML, collectCustomFields, applyStoredTheme } from './ui.js?v=48';
+import * as docs from './documents.js?v=48';
+import { startTour } from './tour.js?v=48';
+import { openRecord, factsHTML, linesHTML, emptyHTML, sectionHTML } from './recordview.js?v=48';
+import { itemMeta } from './itempicker.js?v=48';
 
 /* =========================================================
    VENDORS (Suppliers)

@@ -1,12 +1,12 @@
 // Dashboard + the procure-to-pay chain: PRs → RFQs → POs → GRNs → Invoices → Payments.
-import { api, apiUpload, apiDownload, state, currency, fmtDate, refreshCaches, loadReference } from './api.js?v=47';
-import { esc, toast, badge, openModal, closeModal, openPage, closePage, renderTable, skeletonTable, listPage, wireListPage, customFieldsHTML, collectCustomFields, customFieldValuesHTML } from './ui.js?v=47';
+import { api, apiUpload, apiDownload, state, currency, fmtDate, refreshCaches, loadReference } from './api.js?v=48';
+import { esc, toast, badge, openModal, closeModal, openPage, closePage, renderTable, skeletonTable, listPage, wireListPage, customFieldsHTML, collectCustomFields, customFieldValuesHTML } from './ui.js?v=48';
 import { printPR, printPO, printInvoice, printPayment, printVendorCredit,
          showRecord, buildInvoiceDoc, buildPaymentDoc, buildVendorCreditDoc,
-         buildGRNDoc, buildRFQDoc } from './documents.js?v=47';
-import { setupGuideHTML, wireSetupGuide } from './tour.js?v=47';
-import { itemTriggerHTML, wireItemPickers } from './itempicker.js?v=47';
-import { openRecord, factsHTML, linesHTML, timelineHTML, emptyHTML, sectionHTML } from './recordview.js?v=47';
+         buildGRNDoc, buildRFQDoc } from './documents.js?v=48';
+import { setupGuideHTML, wireSetupGuide } from './tour.js?v=48';
+import { itemTriggerHTML, wireItemPickers } from './itempicker.js?v=48';
+import { openRecord, factsHTML, linesHTML, timelineHTML, emptyHTML, sectionHTML } from './recordview.js?v=48';
 
 /* =========================================================
    ATTACHMENTS — shared panel used inside record detail modals

@@ -632,6 +632,20 @@ table.data td.num, table.data th.num { text-align: right; font-variant-numeric: 
   .access-card { padding: 34px 28px 42px; }
   .access-card h2 { margin-top: 28px; }
 }
+/* Hide login scrollbar that appears after demo button (keeps layout clean) */
+#login-screen, .access-shell, .access-card {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+#login-screen::-webkit-scrollbar, .access-shell::-webkit-scrollbar, .access-card::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+/* Hide the pie/donut graphic above demo button — user requested removal */
+#catalyst-login-container {
+  display: none !important;
+}
 
 .onboard-card { max-width: 560px; text-align: left; }
 .onboard-card h1, .onboard-card .sub { text-align: center; }

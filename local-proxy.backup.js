@@ -7,7 +7,6 @@ const path = require('path');
 
 const PORT = 5174;
 const WEB_DIR = path.join(__dirname, 'procurement_web');
-const LANDING_DIR = path.join(__dirname, 'frontend', 'dist'); // React landing build — served at /landing, app untouched
 const TARGET = 'https://procurement-932021889.development.catalystserverless.com';
 
 const MIME = {
@@ -142,64 +141,11 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // React landing (safe add-on): /landing serves frontend/dist, app at / untouched
-  if (url.pathname === '/landing' || url.pathname.startsWith('/landing/')) {
-    let rel = url.pathname.replace(/^\/landing\/?/, '') || 'index.html';
-    rel = decodeURIComponent(rel.split('?')[0]).replace(/^\/+/, '');
-    let fp = path.join(LANDING_DIR, rel);
-    if (!fp.startsWith(LANDING_DIR)) fp = path.join(LANDING_DIR, 'index.html');
-    if (!fs.existsSync(fp) || fs.statSync(fp).isDirectory()) fp = path.join(LANDING_DIR, 'index.html');
-    const ext = path.extname(fp).toLowerCase();
-    res.setHeader('Content-Type', MIME[ext] || 'application/octet-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    fs.createReadStream(fp).pipe(res);
-    return;
-  }
-
-  // NEW UI AT ROOT: / serves the React build; the classic app lives at /app/.
-  // /app/ also serves the React shell so the React dashboard is reachable there too.
-  if (url.pathname === '/' || url.pathname === '/index.html') {
-    serveFile(res, path.join(LANDING_DIR, 'index.html'));
-    return;
-  }
-  if (url.pathname === '/app' || url.pathname.startsWith('/app/')) {
-    // Serve the React build so /app/ is the real dashboard, not the old app shell.
-    const appFp = path.join(LANDING_DIR, 'index.html');
-    if (fs.existsSync(appFp)) { serveFile(res, appFp); return; }
-    let rel = url.pathname.replace(/^\/app\/?/, '') || 'index.html';
-    rel = decodeURIComponent(rel.split('?')[0]).replace(/^\/+/, '');
-    let fp = path.join(WEB_DIR, rel);
-    if (!fp.startsWith(WEB_DIR)) fp = path.join(WEB_DIR, 'index.html');
-    if (!fs.existsSync(fp) || fs.statSync(fp).isDirectory()) fp = path.join(WEB_DIR, 'index.html');
-    serveFile(res, fp);
-    return;
-  }
-  // React build assets: /assets/* exists only in frontend/dist.
-  // Serve unconditionally so direct navigation to / works with no referer.
-  if (url.pathname.startsWith('/assets/')) {
-    let rel = decodeURIComponent(url.pathname).replace(/^\/+/, '');
-    let fp = path.join(LANDING_DIR, rel);
-    if (fp.startsWith(LANDING_DIR) && fs.existsSync(fp) && !fs.statSync(fp).isDirectory()) {
-      serveFile(res, fp);
-      return;
-    }
-  }
-  const referer = req.headers['referer'] || '';
+  // Static serve
   let urlPath = req.url.split('?')[0];
   if (urlPath === '/' ) urlPath = '/index.html';
   // Prevent path traversal - strip leading / so path.join doesn't treat as absolute
   const safePath = decodeURIComponent(urlPath).replace(/^\/+/, '');
-  // Landing-first: coming from /landing, try the React build before the app.
-  if (referer.includes('/landing')) {
-    const landingTry = path.join(LANDING_DIR, safePath);
-    if (landingTry.startsWith(LANDING_DIR) && fs.existsSync(landingTry) && !fs.statSync(landingTry).isDirectory()) {
-      const ext = path.extname(landingTry).toLowerCase();
-      res.setHeader('Content-Type', MIME[ext] || 'application/octet-stream');
-      res.setHeader('Cache-Control', 'no-cache');
-      fs.createReadStream(landingTry).pipe(res);
-      return;
-    }
-  }
   let filePath = path.join(WEB_DIR, safePath);
   if (!filePath.startsWith(WEB_DIR)) filePath = path.join(WEB_DIR, 'index.html');
   serveFile(res, filePath);

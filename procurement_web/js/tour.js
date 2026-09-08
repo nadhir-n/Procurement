@@ -4,8 +4,8 @@
 // ("what do I do next?"): a spotlight walkthrough of the shell, and a
 // persistent setup checklist that reflects real data in the workspace.
 
-import { esc } from './ui.js?v=47';
-import { state } from './api.js?v=47';
+import { esc } from './ui.js?v=48';
+import { state } from './api.js?v=48';
 
 const SEEN_KEY = 'pf-tour-done';
 const CHECKLIST_DISMISSED_KEY = 'pf-guide-dismissed';

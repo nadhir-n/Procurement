@@ -28,7 +28,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/app.css?v=53">
-  <link rel="stylesheet" href="css/landing.css?v=53">
   <link rel="stylesheet" href="css/stitch-ui.css?v=53">
   <link rel="stylesheet" href="css/enterprise-ui.css?v=53">
   <script src="https://static.zohocdn.com/catalyst/sdk/js/4.6.1/catalystWebSDK.js"></script>
@@ -90,7 +89,45 @@
     </div>
   </div>
 
-    <!-- Login: deleted — the React UI at / is the sole sign-in entry. See frontend/src. -->
+  <!-- Login -->
+  <div id="login-screen" class="screen">
+    <main class="access-shell" aria-labelledby="access-title">
+      <section class="access-brief" aria-label="ProcureFlow platform overview">
+        <div class="access-brand"><span class="access-brand-mark">PF</span><span>ProcureFlow</span><span class="access-brand-edition">Hotel operations</span></div>
+        <div class="access-hero">
+          <p class="access-eyebrow">PROCUREMENT, IN PERFECT FLOW</p>
+          <h1>Every purchase,<br><em>beautifully</em> in control.</h1>
+          <p class="access-copy">One calm command centre for the people, properties and decisions behind every guest experience.</p>
+        </div>
+        <div class="procurement-orbit" aria-label="Procure-to-pay workflow: request, approval, order, receipt and payment">
+          <div class="orbit-halo orbit-halo-a"></div><div class="orbit-halo orbit-halo-b"></div>
+          <div class="orbit-core"><span class="orbit-core-mark">PF</span><strong>Procure<br>to pay</strong><small>in one flow</small></div>
+          <div class="orbit-card orbit-request"><span class="orbit-icon">↗</span><div><b>Request</b><small>PR-0284 raised</small></div><i></i></div>
+          <div class="orbit-card orbit-approval"><span class="orbit-icon">✓</span><div><b>Approval</b><small>Finance cleared</small></div><i></i></div>
+          <div class="orbit-card orbit-order"><span class="orbit-icon">⌁</span><div><b>Order</b><small>PO issued</small></div><i></i></div>
+          <div class="orbit-card orbit-receipt"><span class="orbit-icon">□</span><div><b>Receive</b><small>3-way matched</small></div><i></i></div>
+          <span class="orbit-pulse orbit-pulse-one"></span><span class="orbit-pulse orbit-pulse-two"></span>
+        </div>
+        <div class="access-signals" aria-label="Security controls">
+          <div><span aria-hidden="true">01</span><strong>Invitation-only</strong><small>Access stays within your hotel group.</small></div>
+          <div><span aria-hidden="true">02</span><strong>Role-bound</strong><small>Each decision reaches the right person.</small></div>
+          <div><span aria-hidden="true">03</span><strong>Always traceable</strong><small>Every commitment has a clear history.</small></div>
+        </div>
+      </section>
+      <section class="auth-card access-card">
+        <div class="access-card-top"><span class="access-shield" aria-hidden="true">✦</span><span>Private workspace</span></div>
+        <div class="access-card-copy"><p class="access-kicker">GOOD TO SEE YOU</p><h2 id="access-title">Step into your<br>procurement flow.</h2>
+        <p class="sub">Sign in with the Zoho Account linked to your invitation. Your workspace is ready when you are.</p></div>
+        <div id="catalyst-login-container" class="catalyst-login" aria-live="polite"></div>
+        <button id="btn-login" class="btn btn-primary access-login-fallback" type="button" hidden>Reload secure sign-in</button>
+        <button id="btn-demo-login" class="btn btn-outline" type="button" style="width:100%;margin-top:12px;border:1px dashed #0a7a5c;color:#0a7a5c;background:#f0faf8;">▶ Enter Demo Account — view inside without Zoho invite</button>
+        <div style="text-align:center;font-size:11px;color:var(--ink-muted);margin-top:6px;">demo@procureflow.local / Demo123! &nbsp;·&nbsp; local preview</div>
+        <button id="btn-use-different-account" class="access-text-action" type="button">Use a different Zoho Account</button>
+        <div class="access-support"><strong>Need help signing in?</strong> Use the recovery option in Zoho sign-in, or ask your Procurement administrator for an invitation.</div>
+        <div class="error-line" id="login-error" role="alert"></div>
+      </section>
+    </main>
+  </div>
 
   <!-- Onboarding (first login, no workspace yet) -->
   <div id="onboarding-screen" class="screen" style="overflow-y:auto;align-items:flex-start;padding-top:40px;">

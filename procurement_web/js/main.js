@@ -1,9 +1,9 @@
 // App bootstrap: Catalyst auth → sync → onboarding/lock gates → router.
-import { api, state, refreshCaches } from './api.js?v=47';
-import { toast, wireModalChrome, esc, applyStoredTheme } from './ui.js?v=47';
-import { viewDashboard, viewPRs, viewRFQs, viewPOs, viewGRNs, viewInvoices, viewPayments, viewMyRequests, viewApprovals } from './views-p2p.js?v=47';
-import { viewVendors, viewItems, viewBudgets, viewRecurringBills, viewVendorCredits, viewCustomModules, viewSettings } from './views-admin.js?v=47';
-import { startTour, maybeAutoStartTour } from './tour.js?v=47';
+import { api, state, refreshCaches } from './api.js?v=53';
+import { toast, wireModalChrome, esc, applyStoredTheme } from './ui.js?v=53';
+import { viewDashboard, viewPRs, viewRFQs, viewPOs, viewGRNs, viewInvoices, viewPayments, viewMyRequests, viewApprovals } from './views-p2p.js?v=53';
+import { viewVendors, viewItems, viewBudgets, viewRecurringBills, viewVendorCredits, viewCustomModules, viewSettings } from './views-admin.js?v=53';
+import { startTour, maybeAutoStartTour } from './tour.js?v=53';
 
 // The app must be same-origin with the Catalyst functions for the session
 // cookie to flow. Slate's *.onslate.com preview host is not, so bounce to the
@@ -166,18 +166,25 @@ async function route() {
 
 /* ---------------- Screens ---------------- */
 function show(screenId) {
-  ['boot-screen', 'login-screen', 'onboarding-screen', 'blocked-screen'].forEach(id =>
-    document.getElementById(id).classList.toggle('open', id === screenId));
+  ['boot-screen', 'login-screen', 'onboarding-screen', 'blocked-screen'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('open', id === screenId);
+  });
   document.getElementById('app').classList.toggle('ready', screenId === null);
 }
 
 let loginWidgetMounted = false;
 
+// Old login screen deleted — the React UI at / is the sole sign-in entry.
+// Any unauthenticated state lands there (message preserved via sessionStorage).
 function showLogin(message = '') {
-  show('login-screen');
-  const error = document.getElementById('login-error');
-  if (error) error.textContent = message;
-  window.requestAnimationFrame(mountZohoLogin);
+  try {
+    if (message) sessionStorage.setItem('pf_login_msg', message);
+    else sessionStorage.removeItem('pf_login_msg');
+  } catch { /* private mode */ }
+  const here = new URLSearchParams(window.location.search);
+  const dev = here.get('dev') === '1' ? '?dev=1' : '';
+  window.location.href = `/${dev}#auth`;
 }
 
 function mountZohoLogin() {
@@ -414,6 +421,52 @@ async function enterApp() {
 async function boot() {
   wireChrome();
 
+  // ---- DEV BYPASS: ?dev=1 enters without Zoho (view structure) ----
+  if (new URLSearchParams(window.location.search).get('dev') === '1') {
+    bootStage(0);
+    bootStatus('Dev mode — skipping health check…');
+    state.backendVersion = '4.1.2-dev';
+    // Mock Catalyst — window.catalyst.auth has only a getter, so don't assign directly
+    const mockAuth = {
+      isUserAuthenticated: async () => ({ content: { email_id: 'test@procureflow.local', first_name: 'Nadhir', last_name: 'Noori' } }),
+      generateAuthToken: async () => ({ access_token: 'dev-bypass' }),
+      signIn: () => {},
+      signOut: () => window.location.href = window.location.pathname
+    };
+    try {
+      if (window.catalyst && window.catalyst.auth) {
+        // auth is getter-only — patch methods individually
+        Object.defineProperties(window.catalyst.auth, {
+          isUserAuthenticated: { value: mockAuth.isUserAuthenticated, writable: true, configurable: true },
+          generateAuthToken: { value: mockAuth.generateAuthToken, writable: true, configurable: true }
+        });
+      } else {
+        Object.defineProperty(window, 'catalyst', { value: { auth: mockAuth }, writable: true, configurable: true });
+      }
+    } catch (e) {
+      // Fallback: global mock that api.js will use if catalyst missing
+      window._devMockAuth = mockAuth;
+      // Patch getAuthToken path in api.js via window override
+      window.catalyst = { auth: mockAuth };
+    }
+    state.authEmail = 'test@procureflow.local';
+    state.authName = 'Nadhir Noori (Dev)';
+    try {
+      // Use dev proxy endpoints - don't await health, go straight to sync
+      const sync = await api('POST', '/api/sync-user?dev=1', {});
+      if (sync.user) {
+        state.currentUser = sync.user;
+        await enterApp();
+        if (sync.notice) showFirstRunNotice(sync.notice);
+        return;
+      }
+    } catch (e) {
+      console.warn('dev bypass fallthrough', e);
+      bootFail('Dev bypass failed', e.message, () => window.location.reload());
+      return;
+    }
+  }
+
   // 1. Is the backend actually there? Answering this first means a network
   //    outage never gets reported to the user as a sign-in problem.
   bootStage(0);
@@ -557,11 +610,32 @@ function wireChrome() {
 
   // Embedded Zoho Account sign-in. There is deliberately no public signup
   // route: membership is created only by an administrator invitation.
-  document.getElementById('btn-login').addEventListener('click', () => {
+  document.getElementById('btn-login')?.addEventListener('click', () => {
     loginWidgetMounted = false;
     mountZohoLogin();
   });
-  document.getElementById('btn-use-different-account').addEventListener('click', signOut);
+  // Demo login — local preview without Zoho invite (direct mock, no network hang)
+  document.getElementById('btn-demo-login')?.addEventListener('click', async () => {
+    const btn = document.getElementById('btn-demo-login');
+    btn.disabled = true; btn.textContent = 'Entering demo…';
+    // Hide the pie/graphic above the button
+    document.getElementById('catalyst-login-container')?.style.setProperty('display','none','important');
+    // Direct mock — don't call api/sync-user which can hang on getter-only catalyst
+    state.authEmail = 'demo@procureflow.local';
+    state.authName = 'Demo Account';
+    state.currentUser = { ROWID: 'dev-user-1', FullName: 'Demo Account', Email: 'demo@procureflow.local', Role: 'Admin', Status: 'Active' };
+    state.org = { ROWID: 'dev-org-1', Name: 'Galle Face Hotel Group (LOCAL DEV)', Status: 'Active', Settings: JSON.stringify({ currency: 'LKR', multiProperty: true, capabilities: { rfqs:true, receipts:true, recurringBills:true, vendorCredits:true, budgets:true, customModules:true } }), capabilities: { rfqs:true, receipts:true, recurringBills:true, vendorCredits:true, budgets:true, customModules:true } };
+    try { state.orgSettings = JSON.parse(state.org.Settings); } catch { state.orgSettings = {}; }
+    state.backendVersion = '4.1.2-demo';
+    try {
+      await enterApp();
+      showFirstRunNotice('DEMO MODE — browsing original layout with mock data. No Zoho invite needed.');
+    } catch (e) {
+      btn.disabled = false; btn.textContent = '▶ Enter Demo Account — view inside without Zoho invite';
+      document.getElementById('login-error').textContent = e.message;
+    }
+  });
+  document.getElementById('btn-use-different-account')?.addEventListener('click', signOut);
   window.addEventListener('procureflow:auth-required', () => {
     loginWidgetMounted = false;
     showLogin('Your session has expired. Please sign in again.');

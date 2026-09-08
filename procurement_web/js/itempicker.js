@@ -9,8 +9,8 @@
 // This replaces it with a searchable picker. The trigger is a <button> that
 // carries the chosen item on its own dataset, so the surrounding form code can
 // keep reading `.value` exactly as it did with the <select>.
-import { state, currency } from './api.js?v=47';
-import { esc, openModal, closeModal } from './ui.js?v=47';
+import { state, currency } from './api.js?v=48';
+import { esc, openModal, closeModal } from './ui.js?v=48';
 
 /* ---------- reading an item ---------- */
 

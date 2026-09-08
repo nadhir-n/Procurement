@@ -9,7 +9,7 @@
 // This is the working surface: an identity bar (number, status, actions) over a
 // tabbed body. The paper view is still one click away, because printing is a
 // real job and it already worked well.
-import { esc, badge, openPage, closePage } from './ui.js?v=47';
+import { esc, badge, openPage, closePage } from './ui.js?v=48';
 
 /**
  * openRecord({

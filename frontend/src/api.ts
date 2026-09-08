@@ -5,12 +5,6 @@ const API_BASE = "/server/procurement_api";
 const REQUEST_TIMEOUT_MS = 15000;
 const TOKEN_TIMEOUT_MS = 8000;
 
-declare global {
-  interface Window {
-    catalyst?: { auth?: { generateAuthToken?: () => Promise<unknown> } };
-  }
-}
-
 let authToken: string | null = null;
 let tokenHung = false;
 
@@ -18,7 +12,7 @@ async function getAuthToken(force = false): Promise<string | null> {
   if (authToken && !force) return authToken;
   if (tokenHung && !force) return null;
   try {
-    const generate = window.catalyst?.auth?.generateAuthToken;
+    const generate = (window as unknown as { catalyst?: { auth?: { generateAuthToken?: () => Promise<unknown> } } }).catalyst?.auth?.generateAuthToken;
     if (!generate) return null;
     const res = (await Promise.race([
       generate(),

@@ -1,67 +1,114 @@
 /* -------------------------------------------------------------------------
-   ProcureFlow access landing
-   A deliberate "hospitality control room" composition. This is scoped to the
-   access screen so operational tables retain their high-density clarity.
+   ProcureFlow access landing — new UI integrated into the app login screen.
+   Scoped to #login-screen so operational tables keep their density.
+   Functional hooks (ids, .screen/.open) are untouched by design.
    ------------------------------------------------------------------------- */
-:root { --font: 'DM Sans', sans-serif; }
 
 #login-screen {
   padding: clamp(16px, 3vw, 42px);
   background:
-    radial-gradient(78rem 52rem at 3% 3%, rgba(46, 210, 171, .23), transparent 52%),
-    radial-gradient(55rem 45rem at 100% 100%, rgba(219, 181, 106, .18), transparent 55%),
-    linear-gradient(135deg, #061c24 0%, #0a3037 52%, #082630 100%);
+    radial-gradient(60rem 40rem at 8% 0%, rgba(30, 107, 82, .08), transparent 55%),
+    radial-gradient(50rem 40rem at 100% 100%, rgba(30, 107, 82, .06), transparent 55%),
+    linear-gradient(180deg, #eef6f1 0%, #f8fbf9 100%);
 }
 
 .access-shell {
   width: min(1260px, 100%);
   min-height: min(760px, calc(100vh - clamp(32px, 6vw, 84px)));
   grid-template-columns: minmax(0, 1.26fr) minmax(380px, .74fr);
-  border: 1px solid rgba(235, 255, 249, .18);
+  border: 1px solid #d2e5db;
   border-radius: 34px;
-  background: rgba(247, 255, 252, .10);
-  box-shadow: 0 36px 100px rgba(0, 8, 13, .42), inset 0 1px 0 rgba(255, 255, 255, .18);
-  -webkit-backdrop-filter: blur(28px) saturate(150%);
-  backdrop-filter: blur(28px) saturate(150%);
+  background: #fff;
+  box-shadow: 0 36px 100px rgba(15, 41, 30, .10);
+  overflow: hidden;
 }
 
 .access-brief {
   padding: clamp(30px, 4vw, 55px) clamp(32px, 5vw, 72px);
-  background:
-    radial-gradient(28rem 24rem at 86% 47%, rgba(61, 219, 179, .14), transparent 66%),
-    linear-gradient(155deg, rgba(15, 69, 76, .82), rgba(5, 33, 42, .94));
+  background: linear-gradient(155deg, #f2f8f4, #fbfdfb);
 }
-.access-brief::before { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .18; background-image: linear-gradient(rgba(202, 255, 239, .22) 1px, transparent 1px), linear-gradient(90deg, rgba(202, 255, 239, .22) 1px, transparent 1px); background-size: 52px 52px; mask-image: linear-gradient(135deg, #000, transparent 72%); }
-.access-brief::after { width: 500px; height: 500px; right: -230px; bottom: -265px; border-color: rgba(119, 242, 204, .25); box-shadow: 0 0 0 54px rgba(119, 242, 204, .045), 0 0 0 108px rgba(219, 181, 106, .04); }
-.access-brand { position: relative; z-index: 1; color: #f1fffa; font-size: 16px; }
-.access-brand-mark { width: 33px; height: 33px; border-radius: 12px 12px 12px 4px; color: #073840; background: linear-gradient(140deg, #bcf7df, #4ed5ad); box-shadow: 0 8px 22px rgba(39, 210, 165, .24); font-family: 'Fraunces', serif; font-size: 12px; }
-.access-brand-edition { margin-left: 5px; padding: 5px 8px; border: 1px solid rgba(202,255,239,.22); border-radius: 999px; color: #b2d6cb; font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-.access-hero { position: relative; z-index: 1; margin-top: clamp(40px, 8vh, 90px); animation: landing-rise .8s both cubic-bezier(.18,.85,.28,1); }
-.access-eyebrow { margin: 0 0 16px; color: #7ce1bd; font-size: 10px; letter-spacing: .2em; }
-.access-brief h1 { max-width: 620px; color: #f6fffb; font-family: 'Fraunces', Georgia, serif; font-size: clamp(39px, 4.4vw, 67px); line-height: .93; letter-spacing: -.06em; }
-.access-brief h1 em { color: #9bf3d2; font-weight: 500; }
-.access-copy { max-width: 430px; margin: 23px 0 0; color: #bcdbd2; font-size: 15px; line-height: 1.62; }
+.access-brand { display: flex; align-items: center; gap: 10px; color: #0f291e; font-size: 16px; font-weight: 800; }
+.access-brand-logo { width: 36px; height: 36px; border-radius: 10px; object-fit: contain; background: #fff; border: 1px solid #d2e5db; padding: 2px; }
+.access-brand-edition { margin-left: 5px; padding: 5px 8px; border: 1px solid #d2e5db; border-radius: 999px; color: #1e6b52; font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; background: #fff; }
+.access-hero { margin-top: clamp(32px, 6vh, 64px); animation: landing-rise .7s both cubic-bezier(.18,.85,.28,1); }
+.access-eyebrow { margin: 0 0 16px; color: #1e6b52; font-size: 11px; font-weight: 800; letter-spacing: .16em; }
+.access-brief h1 { max-width: 620px; color: #0f291e; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: clamp(39px, 4.4vw, 64px); line-height: .95; letter-spacing: -.04em; }
+.access-brief h1 em {
+  font-family: 'Playfair Display', Georgia, serif; font-weight: 500;
+  background-image: linear-gradient(90deg, #1e6b52, #2ca87a, #1e6b52); background-size: 200% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: pipe-shimmer 6s ease infinite;
+}
+.access-copy { max-width: 430px; margin: 20px 0 0; color: #3d5c4f; font-size: 15px; line-height: 1.62; }
 
-.procurement-orbit { position: relative; z-index: 1; width: min(555px, 100%); height: 252px; margin: clamp(24px, 4vh, 48px) 0 13px; animation: landing-rise .9s .13s both cubic-bezier(.18,.85,.28,1); }
-.orbit-halo { position: absolute; left: 50%; top: 50%; border: 1px solid rgba(152, 246, 215, .17); border-radius: 50%; transform: translate(-50%, -50%) rotate(-18deg); }
-.orbit-halo-a { width: 360px; height: 165px; animation: orbit-turn 20s linear infinite; }
-.orbit-halo-b { width: 480px; height: 220px; border-color: rgba(217, 187, 123, .13); animation: orbit-turn 30s linear infinite reverse; }
-.orbit-core { position: absolute; z-index: 2; top: 72px; left: 50%; width: 123px; height: 108px; padding: 13px 15px; border: 1px solid rgba(206,255,237,.33); border-radius: 27px 27px 27px 8px; color: #eafff7; background: linear-gradient(145deg, rgba(82, 218, 175, .25), rgba(10, 68, 74, .72)); box-shadow: 0 16px 42px rgba(0, 15, 22, .28), inset 0 1px 0 rgba(255,255,255,.19); transform: translateX(-50%); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
-.orbit-core-mark { display: inline-block; margin-right: 7px; color: #7ff0c5; font-family: 'Fraunces', serif; font-size: 14px; vertical-align: top; }.orbit-core strong { display: inline-block; font-size: 13px; line-height: 1.1; }.orbit-core small { display: block; margin-top: 9px; color: #a8ccc1; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; }
-.orbit-card { position: absolute; z-index: 3; display: flex; align-items: center; gap: 9px; min-width: 133px; padding: 8px 11px 8px 8px; border: 1px solid rgba(221,255,244,.18); border-radius: 15px 15px 15px 5px; color: #eafff7; background: rgba(9, 55, 62, .62); box-shadow: 0 12px 28px rgba(0,13,18,.18), inset 0 1px 0 rgba(255,255,255,.12); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); animation: orbit-float 4.7s ease-in-out infinite; }
-.orbit-card .orbit-icon { display: grid; flex: 0 0 27px; width: 27px; height: 27px; place-items: center; border-radius: 9px 9px 9px 3px; color: #083d40; background: #a5f3d6; font-size: 15px; font-weight: 800; }.orbit-card b { display: block; font-size: 11px; }.orbit-card small { display: block; margin-top: 2px; color: #accbc3; font-size: 9px; white-space: nowrap; }.orbit-card i { width: 5px; height: 5px; margin-left: auto; border-radius: 50%; background: #6af0bf; box-shadow: 0 0 11px #6af0bf; }
-.orbit-request { top: 0; left: 7%; animation-delay: -.7s; }.orbit-approval { top: 18px; right: 2%; animation-delay: -2.5s; }.orbit-order { bottom: 4px; right: 5%; animation-delay: -1.5s; }.orbit-receipt { bottom: 15px; left: 2%; animation-delay: -3.4s; }.orbit-order .orbit-icon { background: #f5d69c; }.orbit-receipt .orbit-icon { background: #b8d9ff; }.orbit-approval .orbit-icon { background: #d2bffc; }
-.orbit-pulse { position: absolute; z-index: 1; left: 50%; top: 50%; width: 8px; height: 8px; border-radius: 50%; background: #a5f3d6; box-shadow: 0 0 0 0 rgba(165,243,214,.55); animation: pulse-out 2.8s infinite; }.orbit-pulse-two { animation-delay: 1.4s; }
+/* Pipeline strip — replaces the orbit animation, same content */
+.access-pipeline {
+  margin: clamp(22px, 4vh, 40px) 0 13px; padding: 14px;
+  border: 1px solid #d2e5db; border-radius: 16px; background: #fff;
+  animation: landing-rise .7s .12s both cubic-bezier(.18,.85,.28,1);
+}
+.access-pipe-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 0 4px;
+  font-size: 11px; font-weight: 800; letter-spacing: .1em; color: #749688; text-transform: uppercase; }
+.access-pipe-tag { color: #1e6b52; white-space: nowrap; }
+.access-pipe-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+.access-pipe-card {
+  border: 1px solid #d2e5db; border-radius: 12px; background: #f8fbf9; padding: 10px 12px;
+  animation: pipe-float 4.7s ease-in-out infinite;
+}
+.access-pipe-card:nth-child(2) { animation-delay: -.9s; }
+.access-pipe-card:nth-child(3) { animation-delay: -2.1s; }
+.access-pipe-card:nth-child(4) { animation-delay: -3.2s; }
+.access-pipe-card b { display: block; font-size: 12px; color: #0f291e; }
+.access-pipe-card small { display: block; margin-top: 2px; color: #749688; font-size: 10px; }
+.access-pipe-card:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(15,41,30,.08); }
 
-.access-signals { width: 100%; grid-template-columns: repeat(3, 1fr); gap: 0; margin-top: auto; animation: landing-rise .9s .22s both cubic-bezier(.18,.85,.28,1); }.access-signals > div { grid-template-columns: 1fr; gap: 4px; padding: 13px 14px 0 0; border-top-color: rgba(207, 247, 234, .16); }.access-signals > div + div { padding-left: 14px; border-left: 1px solid rgba(207,247,234,.13); }.access-signals span { grid-row: auto; color: #75d7b4; }.access-signals strong { font-size: 11px; }.access-signals small { color: #9fc3ba; font-size: 10px; }
+.access-signals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-top: 8px;
+  animation: landing-rise .7s .2s both cubic-bezier(.18,.85,.28,1); }
+.access-signals > div { padding: 13px 14px 0 0; border-top: 1px solid #d2e5db; }
+.access-signals > div + div { padding-left: 14px; border-left: 1px solid #d2e5db; }
+.access-signals span { color: #1e6b52; font-size: 11px; font-weight: 800; }
+.access-signals strong { display: block; font-size: 12px; color: #0f291e; margin-top: 4px; }
+.access-signals small { color: #749688; font-size: 10px; }
 
-.access-card { position: relative; overflow: hidden; padding: clamp(36px, 6vw, 76px) clamp(28px, 5vw, 62px); color: #173d40; background: linear-gradient(160deg, rgba(255,255,252,.98), rgba(240,249,244,.94)); }.access-card::before { content: ''; position: absolute; top: -130px; right: -110px; width: 310px; height: 310px; border: 1px solid rgba(21,130,103,.10); border-radius: 50%; box-shadow: 0 0 0 35px rgba(21,130,103,.025), 0 0 0 70px rgba(21,130,103,.018); }.access-card > * { position: relative; z-index: 1; }.access-card-top { color: #498078; }.access-shield { width: 26px; height: 26px; border-radius: 9px 9px 9px 3px; color: #fff; background: linear-gradient(135deg, #0d8069, #1a4d5d); }.access-kicker { margin: 45px 0 12px; color: #0d8069; font-size: 10px; font-weight: 800; letter-spacing: .16em; }.access-card h2 { margin: 0 0 12px; color: #123d40; font-family: 'Fraunces', Georgia, serif; font-size: clamp(31px, 3vw, 43px); line-height: .98; letter-spacing: -.05em; }.access-card .sub { color: #5b7773; }.catalyst-login { margin-top: 28px; }.access-text-action { color: #117661; }.access-text-action:hover { color: #074c43; }.access-support { color: #708984; border-top-color: #d7e7e0; }.access-support strong { color: #2d5855; }
+/* Auth card — Zoho-style pill actions */
+.access-card { padding: clamp(36px, 6vw, 72px) clamp(28px, 5vw, 60px); background: #fff; }
+.access-card-top { display: flex; align-items: center; gap: 8px; color: #1e6b52; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.access-shield { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 9px; color: #fff; background: #1e6b52; }
+.access-kicker { margin: 40px 0 12px; color: #1e6b52; font-size: 11px; font-weight: 800; letter-spacing: .16em; }
+.access-card h2 { margin: 0 0 12px; color: #0f291e; font-size: clamp(30px, 3vw, 42px); line-height: 1; letter-spacing: -.03em; font-weight: 800; }
+.access-card .sub { color: #3d5c4f; font-size: 14px; }
+.catalyst-login { margin-top: 24px; }
+/* Zoho ghost-pill for the demo entry — id kept for main.js */
+#btn-demo-login {
+  width: 100%; margin-top: 12px; height: 48px; border-radius: 999px;
+  border: 1px solid rgba(15, 41, 30, .4); background: #fff; color: #0f291e;
+  font-weight: 700; font-size: 14px; cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+#btn-demo-login:hover { transform: translateY(-2px); background: #f0f7f3; box-shadow: 0 10px 24px rgba(15,41,30,.10); }
+#btn-demo-login:active { transform: scale(.98); }
+#btn-login {
+  width: 100%; margin-top: 12px; height: 48px; border-radius: 999px;
+  border: none; background: #1e6b52; color: #fff; font-weight: 700; font-size: 14px; cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+#btn-login:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(30,107,82,.32); }
+.access-text-action { margin-top: 12px; background: none; border: none; color: #1e6b52; font-weight: 700; font-size: 13px; cursor: pointer; }
+.access-text-action:hover { text-decoration: underline; }
+.access-support { margin-top: 20px; padding-top: 16px; border-top: 1px solid #d2e5db; color: #749688; font-size: 12px; }
+.access-support strong { color: #0f291e; }
 
-@keyframes landing-rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes orbit-turn { to { transform: translate(-50%, -50%) rotate(342deg); } }
-@keyframes orbit-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-@keyframes pulse-out { 0%, 35% { box-shadow: 0 0 0 0 rgba(165,243,214,.45); } 80%, 100% { box-shadow: 0 0 0 40px rgba(165,243,214,0); } }
+@keyframes landing-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pipe-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes pipe-shimmer { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
-@media (max-width: 880px) { #login-screen { padding: 0; }.access-shell { min-height: 100vh; border: 0; border-radius: 0; grid-template-columns: 1fr; }.access-brief { min-height: 485px; }.access-hero { margin-top: 45px; }.procurement-orbit { height: 225px; margin-top: 26px; }.access-signals { display: none; }.access-card { padding: 42px 30px 48px; }.access-kicker { margin-top: 34px; } }
-@media (max-width: 560px) { .access-brief { min-height: 430px; padding: 27px 23px; }.access-brand-edition { display: none; }.access-brief h1 { font-size: 42px; }.access-copy { display: block; margin-top: 16px; font-size: 13px; }.procurement-orbit { width: 106%; margin-left: -3%; height: 185px; transform: scale(.82); transform-origin: top left; margin-bottom: -17px; }.access-card h2 { font-size: 35px; } }
-@media (prefers-reduced-motion: reduce) { .access-hero, .procurement-orbit, .access-signals, .orbit-card, .orbit-halo, .orbit-pulse { animation: none !important; } }
+@media (max-width: 880px) {
+  #login-screen { padding: 0; }
+  .access-shell { min-height: 100vh; border: 0; border-radius: 0; grid-template-columns: 1fr; }
+  .access-pipe-grid { grid-template-columns: repeat(2, 1fr); }
+  .access-signals { display: none; }
+  .access-card { padding: 42px 30px 48px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .access-hero, .access-pipeline, .access-signals, .access-pipe-card, .access-brief h1 em { animation: none !important; }
+}

@@ -1,13 +1,10 @@
-// Local proxy for ProcureFlow real app
-// Serves procurement_web statically and proxies /server/procurement_api -> deployed Catalyst
-// Option A: live data from cloud. No build step, no Catalyst CLI needed.
+// Local proxy for ProcureFlow — serves frontend/dist at root + proxies /api/* to Catalyst
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
 const PORT = 5174;
-const WEB_DIR = path.join(__dirname, 'procurement_web');
-const LANDING_DIR = path.join(__dirname, 'frontend', 'dist'); // React landing build — served at /landing, app untouched
+const WEB_DIR = path.join(__dirname, 'frontend', 'dist');
 const TARGET = 'https://procurement-932021889.development.catalystserverless.com';
 
 const MIME = {
@@ -28,7 +25,6 @@ const MIME = {
 
 function serveFile(res, filePath) {
   if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
-    // SPA fallback: serve index.html for unknown routes (not API)
     filePath = path.join(WEB_DIR, 'index.html');
   }
   const ext = path.extname(filePath).toLowerCase();
@@ -37,99 +33,8 @@ function serveFile(res, filePath) {
   fs.createReadStream(filePath).pipe(res);
 }
 
-// ---- DEV BYPASS: let localhost view the app without a Zoho invite ----
-// Visit http://localhost:5174/?dev=1  to auto-enter the app as a mock user.
-// This only intercepts the auth gates; all other /api/* still proxy to live Catalyst.
-const DEV_ORG = {
-  ROWID: 'dev-org-1', Name: 'Galle Face Hotel Group (LOCAL DEV)', Status: 'Active',
-  Settings: JSON.stringify({ currency: 'LKR', multiProperty: true, logoDataUri: '', capabilities: { rfqs:true, receipts:true, recurringBills:true, vendorCredits:true, budgets:true, customModules:true } }),
-  capabilities: { rfqs:true, receipts:true, recurringBills:true, vendorCredits:true, budgets:true, customModules:true }
-};
-const DEV_USER = { ROWID: 'dev-user-1', FullName: 'Nadhir Noori (Dev)', Email: 'test@procureflow.local', Role: 'Admin', Status: 'Active' };
-function sendJson(res, obj, status=200) {
-  res.statusCode = status;
-  res.setHeader('Content-Type', 'application/json');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.end(JSON.stringify(obj));
-}
-
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost:${PORT}`);
-  const authHeader = req.headers['authorization'] || '';
-  const isDev = url.searchParams.get('dev') === '1' || req.headers['x-dev-bypass'] === '1' || req.headers.cookie?.includes('pf_dev=1') || authHeader === 'dev-bypass' || req.headers['referer']?.includes('?dev=1');
-
-  // Dev bypass endpoints - answer directly without hitting Catalyst
-  if (isDev && req.url.includes('/api/sync-user')) {
-    // consume body if any
-    req.on('data', ()=>{}); req.on('end', ()=>{
-      sendJson(res, { user: DEV_USER, setupRequired: false, notice: 'DEV MODE: mock user - viewing app structure (no live data). Remove ?dev=1 to use real login.' });
-    });
-    return;
-  }
-  if (isDev && req.url.includes('/api/organizations')) {
-    sendJson(res, [DEV_ORG]); return;
-  }
-  if (isDev && req.url.includes('/api/health')) {
-    // still proxy health but add dev flag
-    sendJson(res, { ok:true, service:'procurement_api', version:'4.1.2-dev-bypass', time: new Date().toISOString() }); return;
-  }
-  // In dev mode, mock all data APIs so pages render (sidebar, lists) instead of 401
-  if (isDev && req.url.includes('/api/')) {
-    // let sync/org/health above handle, else return empty array/object for lists
-    const path = url.pathname;
-    if (path.includes('/api/reference')) return sendJson(res, { categories: [], uoms: [], expenditureClasses: [] });
-    if (path.includes('/api/items') || path.includes('/api/suppliers') || path.includes('/api/users') || path.includes('/api/roles') || path.includes('/api/properties') || path.includes('/api/budgets') || path.includes('/api/pos') || path.includes('/api/prs') || path.includes('/api/rfqs')) {
-      return sendJson(res, []);
-    }
-    if (path.includes('/api/')) return sendJson(res, []);
-  }
-
-  // Proxy Catalyst SDK init + API to deployed Catalyst (needed for Zoho login widget locally)
-  const isProxy = req.url.startsWith('/server/procurement_api') || req.url.startsWith('/__catalyst');
-  if (isProxy) {
-    const targetUrl = TARGET + req.url;
-    try {
-      const headers = { ...req.headers };
-      // Host must be target, not localhost
-      headers.host = 'procurement-932021889.development.catalystserverless.com';
-      // Remove hop-by-hop
-      delete headers['connection'];
-      delete headers['content-length'];
-
-      const body = await new Promise(resolve => {
-        if (req.method === 'GET' || req.method === 'HEAD') return resolve(undefined);
-        const chunks = [];
-        req.on('data', c => chunks.push(c));
-        req.on('end', () => resolve(Buffer.concat(chunks)));
-      });
-
-      const upstream = await fetch(targetUrl, {
-        method: req.method,
-        headers,
-        body,
-        redirect: 'manual'
-      });
-
-      res.statusCode = upstream.status;
-      upstream.headers.forEach((v, k) => {
-        // Skip hop headers, but keep cookies
-        if (k === 'content-encoding' || k === 'content-length' || k === 'transfer-encoding') return;
-        res.setHeader(k, v);
-      });
-      // CORS for local dev
-      res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
-      res.setHeader('Access-Control-Allow-Credentials', 'true');
-
-      const buf = Buffer.from(await upstream.arrayBuffer());
-      res.end(buf);
-    } catch (e) {
-      console.error('Proxy error', req.url, e.message);
-      res.statusCode = 502;
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ error: 'Proxy to Catalyst failed: ' + e.message }));
-    }
-    return;
-  }
 
   // CORS preflight
   if (req.method === 'OPTIONS') {
@@ -142,72 +47,56 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // React landing (safe add-on): /landing serves frontend/dist, app at / untouched
-  if (url.pathname === '/landing' || url.pathname.startsWith('/landing/')) {
-    let rel = url.pathname.replace(/^\/landing\/?/, '') || 'index.html';
-    rel = decodeURIComponent(rel.split('?')[0]).replace(/^\/+/, '');
-    let fp = path.join(LANDING_DIR, rel);
-    if (!fp.startsWith(LANDING_DIR)) fp = path.join(LANDING_DIR, 'index.html');
-    if (!fs.existsSync(fp) || fs.statSync(fp).isDirectory()) fp = path.join(LANDING_DIR, 'index.html');
-    const ext = path.extname(fp).toLowerCase();
-    res.setHeader('Content-Type', MIME[ext] || 'application/octet-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    fs.createReadStream(fp).pipe(res);
+  // Proxy all /server/procurement_api/* and /__catalyst to Catalyst cloud
+  if (req.url.startsWith('/server/procurement_api') || req.url.startsWith('/__catalyst')) {
+    const targetUrl = TARGET + req.url;
+    try {
+      const headers = { ...req.headers };
+      headers.host = 'procurement-932021889.development.catalystserverless.com';
+      delete headers['connection'];
+      delete headers['content-length'];
+      const body = await new Promise(resolve => {
+        if (req.method === 'GET' || req.method === 'HEAD') return resolve(undefined);
+        const chunks = [];
+        req.on('data', c => chunks.push(c));
+        req.on('end', () => resolve(Buffer.concat(chunks)));
+      });
+      const upstream = await fetch(targetUrl, { method: req.method, headers, body, redirect: 'manual' });
+      res.statusCode = upstream.status;
+      upstream.headers.forEach((v, k) => {
+        if (k === 'content-encoding' || k === 'content-length' || k === 'transfer-encoding') return;
+        res.setHeader(k, v);
+      });
+      res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      const buf = Buffer.from(await upstream.arrayBuffer());
+      res.end(buf);
+    } catch (e) {
+      res.statusCode = 502;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ error: 'Proxy to Catalyst failed: ' + e.message }));
+    }
     return;
   }
 
-  // NEW UI AT ROOT: / serves the React build; the classic app lives at /app/.
-  // /app/ also serves the React shell so the React dashboard is reachable there too.
+  // Serve frontend/dist at root (React SPA)
   if (url.pathname === '/' || url.pathname === '/index.html') {
-    serveFile(res, path.join(LANDING_DIR, 'index.html'));
+    serveFile(res, path.join(WEB_DIR, 'index.html'));
     return;
   }
-  if (url.pathname === '/app' || url.pathname.startsWith('/app/')) {
-    // Serve the React build so /app/ is the real dashboard, not the old app shell.
-    const appFp = path.join(LANDING_DIR, 'index.html');
-    if (fs.existsSync(appFp)) { serveFile(res, appFp); return; }
-    let rel = url.pathname.replace(/^\/app\/?/, '') || 'index.html';
-    rel = decodeURIComponent(rel.split('?')[0]).replace(/^\/+/, '');
-    let fp = path.join(WEB_DIR, rel);
-    if (!fp.startsWith(WEB_DIR)) fp = path.join(WEB_DIR, 'index.html');
-    if (!fs.existsSync(fp) || fs.statSync(fp).isDirectory()) fp = path.join(WEB_DIR, 'index.html');
-    serveFile(res, fp);
-    return;
-  }
-  // React build assets: /assets/* exists only in frontend/dist.
-  // Serve unconditionally so direct navigation to / works with no referer.
   if (url.pathname.startsWith('/assets/')) {
-    let rel = decodeURIComponent(url.pathname).replace(/^\/+/, '');
-    let fp = path.join(LANDING_DIR, rel);
-    if (fp.startsWith(LANDING_DIR) && fs.existsSync(fp) && !fs.statSync(fp).isDirectory()) {
+    let fp = path.join(WEB_DIR, decodeURIComponent(url.pathname).replace(/^\/+/, ''));
+    if (fp.startsWith(WEB_DIR) && fs.existsSync(fp) && !fs.statSync(fp).isDirectory()) {
       serveFile(res, fp);
       return;
     }
   }
-  const referer = req.headers['referer'] || '';
-  let urlPath = req.url.split('?')[0];
-  if (urlPath === '/' ) urlPath = '/index.html';
-  // Prevent path traversal - strip leading / so path.join doesn't treat as absolute
-  const safePath = decodeURIComponent(urlPath).replace(/^\/+/, '');
-  // Landing-first: coming from /landing, try the React build before the app.
-  if (referer.includes('/landing')) {
-    const landingTry = path.join(LANDING_DIR, safePath);
-    if (landingTry.startsWith(LANDING_DIR) && fs.existsSync(landingTry) && !fs.statSync(landingTry).isDirectory()) {
-      const ext = path.extname(landingTry).toLowerCase();
-      res.setHeader('Content-Type', MIME[ext] || 'application/octet-stream');
-      res.setHeader('Cache-Control', 'no-cache');
-      fs.createReadStream(landingTry).pipe(res);
-      return;
-    }
-  }
-  let filePath = path.join(WEB_DIR, safePath);
-  if (!filePath.startsWith(WEB_DIR)) filePath = path.join(WEB_DIR, 'index.html');
-  serveFile(res, filePath);
+  // SPA fallback: serve index.html for all other routes
+  serveFile(res, path.join(WEB_DIR, 'index.html'));
 });
 
 server.listen(PORT, () => {
-  console.log(`ProcureFlow local proxy running`);
-  console.log(`  App:    http://localhost:${PORT}`);
-  console.log(`  Proxies /server/procurement_api + /__catalyst -> ${TARGET}`);
-  console.log(`  Health test: http://localhost:${PORT}/server/procurement_api/api/health`);
+  console.log('ProcureFlow local proxy running');
+  console.log('  App:    http://localhost:' + PORT);
+  console.log('  Proxy:  /server/procurement_api + /__catalyst -> ' + TARGET);
 });

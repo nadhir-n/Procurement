@@ -365,7 +365,7 @@ export default function SignInPage() {
               <div className="text-center mt-5">
                 <p className="text-xs text-slate-500">
                   Need hospitality organizational access?{' '}
-                  <a className="font-semibold text-cyan-600 hover:text-cyan-700 hover:underline transition-colors" href="#request-demo">
+                  <a className="font-semibold text-cyan-600 hover:text-cyan-700 hover:underline transition-colors" href="/signup">
                     Request a seat
                   </a>
                 </p>

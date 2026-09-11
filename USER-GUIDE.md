@@ -573,3 +573,43 @@ Real metering counts from the day it went live. Older months only have the legac
 ---
 
 *ProcureFlow v2.0 — built on Zoho Catalyst. For platform support, contact your administrator or the developer team.*
+
+---
+
+## 16. September 2026 Build Notes — What's Actually Live (`nadhir-n_frontend_upgrade`)
+
+> The sections above describe the target platform. This appendix records what
+> is implemented and E2E-verified in the local NestJS + React build.
+
+### Live and tested end-to-end (demo tenant, 2026-09-11)
+- **PRs**: draft → awaiting → approved/rejected → processed, recall/edit/
+  re-submit/cancel; requestor-only guards; approve-after-reject. Pages:
+  My Requests, Purchase Requests, Approvals inbox.
+- **POs**: from approved PR (line picker), draft → pending → approved →
+  issued, per-line received/billed quantities, close/cancel.
+- **Receives**: GRN from PO with remaining-qty guard, complete accrues
+  receipts; PO status recomputes per line.
+- **Bills**: from PO / completed receive (one bill per receive) / manual;
+  submit → approve accrues billed qty; void reverses. **3-way match**
+  endpoint (±2% price, receipt-required on receive-linked bills).
+- **Payments**: partial/full, excess auto-creates vendor credit (same-vendor
+  apply), multi-bill tender, batches (draft → processed / partial / failed
+  with retry), payment history.
+- **RFQ**: from PR/manual, publish with per-vendor magic links, public
+  no-login vendor portal (quote, resubmit-replaces), compare matrix with
+  best-price flags, partial awards with quantity locks, award → one PO per
+  vendor at bid prices.
+- **Recurring**: weekly/monthly/quarterly/yearly profiles, end dates,
+  generate-due child bills, disable.
+- **Dashboard home**: live KPIs, spend (total/PO/non-PO + 12-month bars),
+  attention queue, payables aging, budget rows, top-10 intelligence,
+  payment-mode split, compliance tiles; My Home setup view one click away.
+- **Demo accounts**: `demo@procureflow.io` / `Demo123!` (one-click demo
+  button needs no password); `admin@acme.com` / `password123`.
+
+### Partially live
+- **Vendors/Items**: manual CRUD + validation only (no portal invite,
+  clone, import, bank/tax fields yet). **Budgets/Analytics**: routes +
+  stubs. No Settings pages, roles UI, notifications, attachments,
+  OCR, webhooks, Books sync, or Developer Portal — guide sections
+  7–12 remain target-state documentation.

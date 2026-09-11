@@ -4,9 +4,10 @@ import * as bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Seeding two independent fake tenants...');
+  console.log('🌱 Seeding two independent fake tenants + demo account...');
 
   const passwordHash = await bcrypt.hash('password123', 10);
+  const demoHash = await bcrypt.hash('Demo123!', 10);
 
   // TENANT A
   const orgA = await prisma.organization.create({
@@ -36,9 +37,24 @@ async function main() {
     },
   });
 
+  // DEMO tenant — for Stitch design handoff
+  const orgDemo = await prisma.organization.create({
+    data: { name: 'Galle Face Hotel Group', plan: 'professional' },
+  });
+
+  await prisma.user.create({
+    data: {
+      email: 'demo@procureflow.io',
+      passwordHash: demoHash,
+      tenantId: orgDemo.id,
+      status: 'active',
+    },
+  });
+
   console.log(`✅ Seed complete.`);
-  console.log(`Tenant A: ${orgA.id} | User: admin@acme.com`);
-  console.log(`Tenant B: ${orgB.id} | User: admin@globex.com`);
+  console.log(`Tenant A: ${orgA.id} | User: admin@acme.com / password123`);
+  console.log(`Tenant B: ${orgB.id} | User: admin@globex.com / password123`);
+  console.log(`Demo: ${orgDemo.id} | User: demo@procureflow.io / Demo123!`);
 }
 
 main()

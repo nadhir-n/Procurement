@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../AuthContext';
+import { RippleButton } from '../components/ui/RippleButton';
 
 declare global {
   interface Window {
@@ -17,7 +18,7 @@ declare global {
 
 export default function SignInPage() {
   const navigate = useNavigate();
-  const { loginDemo } = useAuth();
+  const { setUser: setAuthUser, loginDemo } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
@@ -27,24 +28,37 @@ export default function SignInPage() {
   const [emailBlurred, setEmailBlurred] = useState(false);
   const [pwFocused, setPwFocused] = useState(false);
   const [submitState, setSubmitState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const attemptRef = useState({ id: 0 })[0];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSubmitState('loading');
     setLoading(true);
+    const attempt = ++attemptRef.id;
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Sign-in timed out after 12s — is the backend running on :3000?')), 12000)
+    );
     try {
-      // Use Catalyst SDK for auth (via window.catalyst)
-      if (typeof window !== 'undefined' && window.catalyst?.auth?.signIn) {
-        await window.catalyst.auth.signIn('auth-container');
-      } else {
-        // Fallback: redirect to /app for Catalyst auth
-        window.location.href = '/app/';
-      }
+      const { login, setToken } = await import('../api');
+      const res: any = await Promise.race([login(email.trim(), password.trim()), timeout]);
+      if (attempt !== attemptRef.id) return; // user cancelled
+      setToken(res.access_token);
+      setAuthUser(res.access_token, { id: res.userId, email: email.trim(), name: res.userName || email.trim().split('@')[0], orgName: res.orgName });
       setSubmitState('success');
+      navigate('/workspace', { state: { orgName: res.orgName } });
     } catch (err: any) {
+      if (attempt !== attemptRef.id) return; // user cancelled
+      // Fallback: if local backend down, try Catalyst SDK (skip on timeout/cancel)
+      if (!err.message?.includes('timed out') && typeof window !== 'undefined' && window.catalyst?.auth?.signIn) {
+        try {
+          await window.catalyst.auth.signIn('auth-container');
+          setSubmitState('success');
+          return;
+        } catch {}
+      }
       setSubmitState('error');
-      setError(err.message || 'Sign in failed. Please try again.');
+      setError(err.message || 'Sign in failed. Check email/password and that backend is running on :3000.');
     } finally {
       setLoading(false);
     }
@@ -59,15 +73,27 @@ export default function SignInPage() {
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   const emailOk = emailBlurred && emailValid;
   const pwActive = pwFocused || password.length > 0;
+  const pwOk = password.length > 0;
+  const ready = emailOk && pwOk;
   const stage = submitState === 'success' ? 3 : submitState === 'error' ? -1 : submitState === 'loading' ? 4 : emailOk && pwActive ? 2 : emailOk ? 1 : 0;
   const stageText = stage === 3 ? 'Signed in — entering workspace' : stage === -1 ? 'Sign in failed — check your details and retry' : stage === 4 ? 'Signing in' : stage === 2 ? 'Password entry active' : stage === 1 ? 'Email accepted' : 'Sign-in progress';
+  // Orbit ring travels: logo(0) → lock(1) → bolt(2) → check(3/4/-1)
+  const orbitAt = stage <= 0 ? 'logo' : stage === 1 ? 'lock' : stage === 2 ? 'bolt' : 'check';
+  const orbitColor = stage === 3 ? 'border-t-emerald-500' : stage === -1 ? 'border-t-rose-500' : orbitAt === 'lock' ? 'border-t-cyan-500' : orbitAt === 'bolt' ? 'border-t-amber-500' : 'border-t-[#2084FA]';
+  const orbitSpeed = stage === 4 ? 0.7 : 2.2;
+  const OrbitRing = ({ size = 'w-8 h-8' }: { size?: string }) => (
+    <motion.span
+      layoutId="signin-orbit"
+      className={`absolute ${size} rounded-full border-2 border-transparent ${orbitColor} pointer-events-none`}
+      animate={{ rotate: 360 }}
+      transition={{ duration: orbitSpeed, repeat: Infinity, ease: 'linear', layout: { type: 'spring', stiffness: 200, damping: 26 } }}
+    />
+  );
 
   return (
     <div className="min-h-screen bg-[#E7EDF9] flex items-center justify-center p-3 sm:p-6 lg:p-10 antialiased text-slate-800 relative overflow-hidden">
       {/* Cropped P-icon as subtle whole-page background watermark */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none" aria-hidden="true">
-        <img src="/img/procureflow-p-icon.png" alt="" className="w-[820px] max-w-[90vw] h-auto opacity-[0.08] blur-[0.3px]" />
-      </div>
+      <div className="absolute inset-0 pf-pattern-bg opacity-70 pointer-events-none select-none" aria-hidden="true" />
       {/* soft gradient overlay to keep card readable */}
       <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-slate-900/[0.04] pointer-events-none" aria-hidden="true" />
       {/* Main Browser / Card Wrapper Window */}
@@ -88,20 +114,16 @@ export default function SignInPage() {
             transition={{ duration: 0.4 }}
           >
             <span className="sr-only" aria-live="polite">{stageText}</span>
-            {/* Official logo with circular orbit ring */}
+            {/* Official logo — orbit ring rests here while idle */}
             <div className="relative w-10 h-8 flex items-center justify-center">
               <img src="/img/procureflow-logo-full.png" alt="ProcureFlow" className="h-6 w-auto object-contain" />
-              <motion.span
-                className={`absolute w-9 h-9 rounded-full border-2 border-transparent ${stage === 3 ? 'border-t-emerald-500' : stage === -1 ? 'border-t-rose-500' : 'border-t-cyan-500'}`}
-                animate={{ rotate: 360 }}
-                transition={{ duration: stage === 4 ? 0.7 : 2.6, repeat: Infinity, ease: 'linear' }}
-              />
+              {orbitAt === 'logo' && <OrbitRing size="w-9 h-9" />}
             </div>
-            {/* Icon flow: lock → bolt → check */}
+            {/* Icon flow: lock → bolt → check (orbit travels as the user fills the form) */}
             {[
-              { label: 'Email', done: stage === -1 || stage >= 1, path: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z', idle: 'text-cyan-600', active: 'bg-cyan-500 border-cyan-500 text-white shadow-[0_0_12px_rgba(34,211,238,0.7)]' },
-              { label: 'Password', done: stage === -1 || stage >= 2, path: 'M13 10V3L4 14h7v7l9-11h-7z', idle: 'text-amber-500', active: 'bg-amber-500 border-amber-500 text-white shadow-[0_0_12px_rgba(245,158,11,0.7)]' },
-              { label: 'Verified', done: stage >= 3, error: stage === -1, path: stage === -1 ? 'M6 18L18 6M6 6l12 12' : 'M5 13l4 4L19 7', idle: 'text-emerald-600', active: 'bg-emerald-500 border-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.7)]' },
+              { key: 'lock', label: 'Email', done: stage === -1 || stage >= 1, path: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z', idle: 'text-cyan-600', active: 'bg-cyan-500 border-cyan-500 text-white shadow-[0_0_12px_rgba(34,211,238,0.7)]' },
+              { key: 'bolt', label: 'Password', done: stage === -1 || stage >= 2, path: 'M13 10V3L4 14h7v7l9-11h-7z', idle: 'text-amber-500', active: 'bg-amber-500 border-amber-500 text-white shadow-[0_0_12px_rgba(245,158,11,0.7)]' },
+              { key: 'check', label: 'Verified', done: ready || stage >= 3, error: stage === -1, path: stage === -1 ? 'M6 18L18 6M6 6l12 12' : 'M5 13l4 4L19 7', idle: 'text-emerald-600', active: 'bg-emerald-500 border-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.7)]' },
             ].map((s, i) => (
               <div key={s.label} className="flex items-center gap-2.5">
                 {i > 0 && (
@@ -113,11 +135,12 @@ export default function SignInPage() {
                 )}
                 <motion.span
                   title={s.label}
-                  className={`w-6 h-6 rounded-full border flex items-center justify-center shadow-sm ${s.error ? 'bg-rose-500 border-rose-500 text-white shadow-[0_0_12px_rgba(244,63,94,0.7)]' : s.done ? s.active : 'bg-slate-50 border-slate-200'}`}
+                  className={`relative w-6 h-6 rounded-full border flex items-center justify-center shadow-sm ${s.error ? 'bg-rose-500 border-rose-500 text-white shadow-[0_0_12px_rgba(244,63,94,0.7)]' : s.done ? s.active : 'bg-slate-50 border-slate-200'}`}
                   animate={stage === 4 ? { scale: [0.9, 1.15, 0.9] } : s.done || s.error ? { scale: 1 } : { opacity: [0.45, 1, 0.45], scale: [0.92, 1.08, 0.92] }}
                   transition={stage === 4 ? { duration: 0.6, repeat: Infinity, delay: i * 0.2 } : { duration: 2.4, repeat: Infinity, delay: i * 0.8 }}
                 >
-                  <svg className={`w-3.5 h-3.5 ${s.done || s.error ? '' : s.idle}`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                  {orbitAt === s.key && <OrbitRing />}
+                  <svg className={`w-3.5 h-3.5 ${s.done || s.error ? '' : s.idle}`} fill="none" stroke="currentColor" strokeWidth={stage === -1 && s.key === 'check' ? 3 : 2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
                     <path d={s.path} />
                   </svg>
                 </motion.span>
@@ -279,13 +302,7 @@ export default function SignInPage() {
                   transition={{ duration: 0.3, delay: 0.7 }}
                   className="pt-2"
                 >
-                  <motion.button
-                    whileHover={{ y: -2, boxShadow: "0 10px 25px -5px rgba(32,132,250,0.45)" }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full py-3 px-6 bg-gradient-to-r from-[#2084FA] to-[#7F3EDD] hover:brightness-110 active:scale-[0.99] text-white font-semibold text-sm rounded-xl shadow-md shadow-blue-500/25 transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer"
-                    type="submit"
-                    disabled={loading}
-                  >
+                  <RippleButton type="submit" disabled={loading}>
                     <AnimatePresence mode="wait">
                       {loading ? (
                         <motion.span
@@ -323,7 +340,7 @@ export default function SignInPage() {
                         </motion.span>
                       )}
                     </AnimatePresence>
-                  </motion.button>
+                  </RippleButton>
                 </motion.div>
               </form>
 
@@ -345,19 +362,17 @@ export default function SignInPage() {
                   <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">or</span>
                   <span className="h-px flex-1 bg-slate-200" />
                 </div>
-                <motion.button
+                <RippleButton
                   type="button"
+                  variant="outline"
                   onClick={handleDemo}
-                  whileHover={{ y: -2, boxShadow: "0 10px 25px -5px rgba(127,62,221,0.35)" }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full py-3 px-6 bg-white border-2 border-[#D9E3F7] hover:border-[#2084FA] text-[#07175A] font-semibold text-sm rounded-xl transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <svg className="w-4 h-4 text-[#7F3EDD]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
                     <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                   </svg>
                   Explore the live demo
-                </motion.button>
+                </RippleButton>
                 <p className="text-center text-[11px] text-slate-400 mt-2">Instant access with a sample hotel group — no sign-in required.</p>
               </motion.div>
 
@@ -544,6 +559,70 @@ export default function SignInPage() {
           border: 1px solid rgba(255, 255, 255, 0.4);
         }
       `}</style>
+
+      {/* Submit takeover: slow pop-up capturing the screen while signing in */}
+      <AnimatePresence>
+        {(submitState === 'loading' || submitState === 'success') && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <motion.div
+              className="bg-white rounded-3xl shadow-2xl px-10 py-8 flex flex-col items-center gap-4 max-w-sm w-[90vw]"
+              initial={{ opacity: 0, scale: 0.82, y: 26 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 12 }}
+              transition={{ type: 'spring', stiffness: 110, damping: 17 }}
+            >
+              <div className="relative w-16 h-16 flex items-center justify-center">
+                <img src="/img/procureflow-p-icon.png" alt="ProcureFlow" className="w-12 h-12 object-contain" />
+                <motion.span
+                  className="absolute w-16 h-16 rounded-full border-[3px] border-transparent border-t-[#2084FA]"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1.1, repeat: submitState === 'loading' ? Infinity : 0, ease: 'linear' }}
+                />
+              </div>
+              <div className="text-center">
+                <div className="text-base font-bold text-slate-900">
+                  {submitState === 'success' ? 'Signed in' : 'Signing you in…'}
+                </div>
+                <div className="text-xs text-slate-500 mt-1 truncate max-w-[240px]">{email.trim() || 'Verifying credentials'}</div>
+              </div>
+              {submitState === 'loading' ? (
+                <>
+                  <div className="w-48 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                    <motion.div
+                      className="h-full w-1/3 rounded-full bg-gradient-to-r from-[#2084FA] to-[#7F3EDD]"
+                      animate={{ x: ['-100%', '300%'] }}
+                      transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+                    />
+                  </div>
+                  <button
+                    onClick={() => { attemptRef.id++; setSubmitState('idle'); setLoading(false); }}
+                    className="text-xs font-semibold text-slate-400 hover:text-slate-600 underline"
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <motion.div
+                  className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 260, damping: 14, delay: 0.1 }}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                    <path d="M5 13l4 4L19 7" />
+                  </svg>
+                </motion.div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

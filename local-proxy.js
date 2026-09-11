@@ -47,6 +47,43 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // Proxy /api/* to local Nest backend (where demo lives), and /server/* to Catalyst cloud
+  if (req.url.startsWith('/api/')) {
+    const targetUrl = 'http://localhost:3000' + req.url;
+    try {
+      const headers = { ...req.headers };
+      delete headers['connection'];
+      delete headers['content-length'];
+      const body = await new Promise(resolve => {
+        if (req.method === 'GET' || req.method === 'HEAD') return resolve(undefined);
+        const chunks = [];
+        req.on('data', c => chunks.push(c));
+        req.on('end', () => resolve(Buffer.concat(chunks)));
+      });
+      const upstream = await fetch(targetUrl, {
+        method: req.method,
+        headers,
+        body,
+        redirect: 'manual',
+      });
+      res.statusCode = upstream.status;
+      upstream.headers.forEach((v, k) => {
+        if (k === 'content-encoding' || k === 'content-length' || k === 'transfer-encoding') return;
+        res.setHeader(k, v);
+      });
+      res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      const buf = Buffer.from(await upstream.arrayBuffer());
+      res.end(buf);
+    } catch (e) {
+      console.error('API proxy error', req.url, e.message);
+      res.statusCode = 502;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ error: 'Backend proxy failed: ' + e.message }));
+    }
+    return;
+  }
+
   // Proxy all /server/procurement_api/* and /__catalyst to Catalyst cloud
   if (req.url.startsWith('/server/procurement_api') || req.url.startsWith('/__catalyst')) {
     const targetUrl = TARGET + req.url;

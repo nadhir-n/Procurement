@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import SlideDownNotice from '../components/SlideDownNotice';
+import { RippleButton } from '../components/ui/RippleButton';
 
 export default function SignUpPage() {
   const [loading, setLoading] = useState(false);
@@ -77,19 +78,16 @@ export default function SignUpPage() {
 
               {/* Request Approval Button */}
               <div className="pt-2">
-                <motion.button
+                <RippleButton
                   onClick={handleRequestApproval}
                   disabled={loading}
-                  whileHover={{ y: -2, boxShadow: "0 10px 25px -5px rgba(32,132,250,0.45)" }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full py-3 px-6 bg-gradient-to-r from-[#2084FA] to-[#7F3EDD] hover:brightness-110 active:scale-[0.99] text-white font-semibold text-sm rounded-xl shadow-md shadow-blue-500/25 transition-all duration-150 flex items-center justify-center gap-2 group cursor-pointer disabled:opacity-70"
                   type="button"
                 >
                   <span>Request Approval from Admin</span>
-                  <svg className="w-4 h-4 transition-transform duration-150 group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path d="M17 8l4 4m0 0l-4 4m4-4H3" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></path>
                   </svg>
-                </motion.button>
+                </RippleButton>
               </div>
 
               {/* Alternative Link */}

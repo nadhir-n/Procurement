@@ -14,11 +14,12 @@ import { useCustomModules } from '../../settings/pages/CustomModules';
 interface SidebarProps {
   active: string;
   setActive: (tab: string) => void;
+  onGettingStarted?: () => void;
   collapsed: boolean;
   setCollapsed: (v: boolean) => void;
 }
 
-export function Sidebar({ active, setActive, collapsed, setCollapsed }: SidebarProps) {
+export function Sidebar({ active, setActive, onGettingStarted, collapsed, setCollapsed }: SidebarProps) {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const rowRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -87,7 +88,7 @@ export function Sidebar({ active, setActive, collapsed, setCollapsed }: SidebarP
   return (
     <aside className={`${collapsed ? 'w-[76px]' : 'w-[240px]'} flex-shrink-0 bg-[#f3f5fb] border-r border-[#e2e8f0] flex flex-col relative transition-all duration-200 ease-[cubic-bezier(0.25,0.1,0.25,1)]`}>
       {/* Getting Started — above Home for quick visibility (Zoho pattern) */}
-      <GettingStarted onClick={() => setActive('home')} collapsed={collapsed} />
+      <GettingStarted onClick={() => { if (onGettingStarted) onGettingStarted(); else setActive('home'); }} collapsed={collapsed} />
 
       <TooltipProvider delayDuration={150}>
         <nav className={`pf-sidebar-scroll flex-1 min-h-0 overflow-y-scroll overscroll-contain pb-8 ${collapsed ? 'px-1.5 py-1.5 space-y-1' : 'px-2 py-2 space-y-[2px]'}`} style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' as any }}>

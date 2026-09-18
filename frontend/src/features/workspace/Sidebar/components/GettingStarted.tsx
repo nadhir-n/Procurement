@@ -4,7 +4,13 @@ interface GettingStartedProps {
 }
 
 export function GettingStarted({ onClick, collapsed }: GettingStartedProps) {
-  if (collapsed) return null;
+  if (collapsed) {
+    return (
+      <button onClick={onClick} title="Getting Started" className="mx-auto mt-3 mb-2.5 w-10 h-10 rounded-xl bg-[#eef2ff] border border-[#e0e7ff] flex items-center justify-center hover:bg-[#e6edff] transition-colors shrink-0">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="#f59e0b"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"/></svg>
+      </button>
+    );
+  }
   return (
     <button onClick={onClick} className="mx-3 mt-3 mb-2.5 rounded-xl bg-[#eef2ff] border border-[#e0e7ff] p-3 text-left hover:bg-[#e6edff] transition-colors shrink-0">
       <span className="w-full flex items-center justify-between">

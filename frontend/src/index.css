@@ -4,20 +4,24 @@
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display: "IBM Plex Sans", "Inter", system-ui, sans-serif;
   --color-brand: #2084FA;
-  --color-brand-hover: #5248F5;
+  --color-brand-hover: #1B6FE0;
+  --color-accent: #2084FA;
   --color-enterprise: #07175A;
   --color-hub-from: #5248F5;
   --color-hub-to: #7F3EDD;
   --color-tri-cyan: #2DC5FB;
   --background-image-hub: linear-gradient(135deg, #5248F5, #7F3EDD);
   --background-image-brand-tri: linear-gradient(135deg, #2DC5FB, #2084FA, #7F3EDD);
-  --color-success: #2084FA;
-  --color-warning: #F59E0B;
-  --color-error: #E42525;
+  --color-success: #16A34A;
+  --color-warning: #D97706;
+  --color-error: #DC2626;
   --color-info: #0EA5E9;
   --color-border: #E2E8F0;
-  --color-surface: #F8FAFC;
+  --color-surface: #F6F7F9;
   --color-surface-elevated: #FFFFFF;
+  --color-ink: #0F172A;
+  --color-muted: #64748B;
+  --color-line: #E2E8F0;
 }
 
 @layer base {
@@ -25,11 +29,17 @@
     margin: 0;
     padding: 0;
     min-height: 100%;
+    background: #F6F7F9;
+    color: #0F172A;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
   h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.01em; }
   * { scrollbar-width: thin; }
   ::selection { background-color: #D9E6FF; color: #07175A; }
   input[type="number"] { font-variant-numeric: tabular-nums; }
+  :focus-visible { outline: 2px solid #2084FA; outline-offset: 2px; border-radius: 6px; }
+  button { cursor: pointer; }
 }
 
 /* ProcureFlow tiled line-icon watermark (auth + portal backdrops) */
@@ -62,6 +72,25 @@
 @keyframes collapsible-up {
   from { height: var(--radix-collapsible-content-height); opacity: 1; }
   to { height: 0; opacity: 0; }
+}
+
+/* Full-screen settings entrance — simple, professional (fade + gentle rise) */
+@keyframes pf-settings-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.996); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes pf-settings-bar-in {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.pf-settings-enter {
+  animation: pf-settings-in 0.34s cubic-bezier(0.22, 0.8, 0.3, 1) both;
+}
+.pf-settings-bar-enter {
+  animation: pf-settings-bar-in 0.28s cubic-bezier(0.22, 0.8, 0.3, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pf-settings-enter, .pf-settings-bar-enter { animation: none; }
 }
 
 /* Slim styled scrollbar (Zoho sidebar — slim 6px, always visible) */

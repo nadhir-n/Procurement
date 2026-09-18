@@ -21,6 +21,9 @@ export default function Workspace() {
   const path = location.pathname.replace('/workspace/', '').replace('/workspace', '');
   const activeTab = path || 'home';
   const isHome = !path || path === 'home';
+  // Zoho-style: settings takes over the full screen — no TopBar, no Sidebar,
+  // no way to reach workspace pages until you close it.
+  const isSettings = path === 'settings' || path.startsWith('settings/');
 
   useEffect(() => {
     if (!user) return;
@@ -43,6 +46,31 @@ export default function Workspace() {
   }
 
   return (
+    isSettings ? (
+      // ── Full-screen settings mode (Zoho pattern) ──
+      <div className="flex flex-col h-screen overflow-hidden bg-[#F6F7F9] pf-settings-enter">
+        <div className="shrink-0 bg-white border-b border-slate-200 pf-settings-bar-enter">
+          <div className="px-4 sm:px-6 h-14 flex items-center gap-3 max-w-[1280px] mx-auto w-full">
+            <span className="w-9 h-9 rounded-xl overflow-hidden border border-slate-200 bg-white flex items-center justify-center shrink-0 shadow-sm p-1">
+              <img src="/img/logo.svg" alt="ProcureFlow" className="w-7 h-7 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/img/procureflow-logo-full.png'; }} />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-[14px] font-bold text-slate-900 leading-tight">All Settings</span>
+              <span className="block text-[11.5px] text-slate-400 leading-tight truncate">{wsUser.orgName || 'Workspace'}</span>
+            </span>
+            <button
+              onClick={() => navigate('/workspace')}
+              className="ml-auto inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-[13px] font-semibold text-slate-700 transition-colors shrink-0"
+            >
+              Close Settings <span aria-hidden="true" className="text-red-500 font-bold">✕</span>
+            </button>
+          </div>
+        </div>
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <Outlet />
+        </div>
+      </div>
+    ) : (
     <div className="flex flex-col h-screen overflow-hidden">
       {/* Separate Top Bar — fixed, doesn't change per tab (Zoho style) */}
       <TopBar user={wsUser} />
@@ -52,14 +80,15 @@ export default function Workspace() {
         <Sidebar
           active={activeTab}
           setActive={(tab: string) => { navigate(tab === 'home' ? '/workspace' : `/workspace/${tab}`); }}
+          onGettingStarted={() => { navigate('/workspace'); setHomeView('setup'); }}
           collapsed={!sidebarOpen}
           setCollapsed={(v: boolean) => setSidebarOpen(!v)}
         />
 
         <main className="flex-1 flex flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto">
-            {/* Hello strip — home only, scrolls away first like Zoho (Zoho hides it on inner pages) */}
-            {isHome ? (
+            {/* Hello strip — home only, hidden in Getting Started guide mode like Zoho */}
+            {isHome && homeView !== 'setup' ? (
               <div className="relative bg-white border-b border-slate-200 px-4 sm:px-6 py-4 overflow-hidden shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
                 <div className="absolute inset-0 pf-pattern-bg pointer-events-none" style={{ opacity: 0.38 }} aria-hidden="true" />
                 <div className="absolute inset-0 pf-logo-tile-bg pointer-events-none" aria-hidden="true" style={{ opacity: 0.1 }} />
@@ -80,7 +109,7 @@ export default function Workspace() {
                 </div>
               </div>
             ) : null}
-            {isHome ? (
+            {isHome && homeView !== 'setup' ? (
               <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-slate-200 px-4 sm:px-6 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
                 <div className="flex items-center gap-5 text-sm pt-2.5">
                   <button
@@ -107,5 +136,6 @@ export default function Workspace() {
         </main>
       </div>
     </div>
+    )
   );
 }
